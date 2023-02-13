@@ -5,10 +5,13 @@ import React, { useState, useEffect } from 'react';
 import * as Location from 'expo-location'
 
 import { API_KEY } from "@env";
+import { API_KEY2 } from "@env";
 
 
 export default function App() {
   const [osoite, setOsoite] = useState('')
+  const [restaurants, setRestaurants] = useState([]);
+
 
   const initial = {
     latitude: 60.200692,
@@ -48,6 +51,23 @@ export default function App() {
       .catch(error => console.error(error));
   }
 
+  const fetchRestaurants = (lat, lng) => {
+    fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1500&type=restaurant&key=${API_KEY2}`)
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      console.log(data.results);
+      setRestaurants(data.results);
+    })
+    .catch(error => console.error(error));
+};
+  useEffect(() => {
+    fetchRestaurants(coordinates.latitude, coordinates.longitude);
+  }, [coordinates]);
+  
+
+
   return (
     <View style={styles.container}>
           <MapView
@@ -59,6 +79,19 @@ export default function App() {
           coordinate={coordinates}
           title={osoite}
         />
+
+{restaurants.map(restaurant => (
+        <Marker
+          key={restaurant.id}
+          coordinate={{
+            latitude: restaurant.geometry.location.lat,
+            longitude: restaurant.geometry.location.lng
+          }}
+          title={restaurant.name}
+        />
+      ))}
+
+
       </MapView>
 
 
@@ -66,6 +99,10 @@ export default function App() {
     <View style={styles.Button} >
       <Button onPress={geocode} title='hae'></Button>
       </View>
+
+
+
+
     </View>
   );
 }
